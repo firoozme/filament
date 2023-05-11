@@ -22,7 +22,7 @@ class TestsRecords
             $html = array_map(
                 function ($record) {
                     if ($record instanceof Model) {
-                        $record = $this->instance()->getTableRecordKey($record);
+                        $record = $this->instance()->getTable()->getRecordKey($record);
                     }
 
                     return "{$this->instance()->id}.table.records.{$record}";
@@ -46,7 +46,7 @@ class TestsRecords
             $html = array_map(
                 function ($record) {
                     if ($record instanceof Model) {
-                        $record = $this->instance()->getTableRecordKey($record);
+                        $record = $this->instance()->getTable()->getRecordKey($record);
                     }
 
                     return "wire:key=\"{$this->instance()->id}.table.records.{$record}\"";

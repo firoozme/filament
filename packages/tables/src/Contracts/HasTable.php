@@ -11,8 +11,9 @@ use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 interface HasTable extends HasForms
 {
@@ -34,7 +35,7 @@ interface HasTable extends HasForms
      */
     public function getTableFilterState(string $name): ?array;
 
-    public function getSelectedTableRecords(): Collection;
+    public function getSelectedTableRecords(): EloquentCollection;
 
     public function parseFilterName(string $name): string;
 
@@ -75,8 +76,6 @@ interface HasTable extends HasForms
     public function getTableColumnToggleForm(): Form;
 
     public function getTableRecord(?string $key): ?Model;
-
-    public function getTableRecordKey(Model $record): string;
 
     public function mountedTableActionRecord(int | string | null $record): void;
 

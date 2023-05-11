@@ -4,6 +4,7 @@ namespace Filament\Tables\Concerns;
 
 use Filament\Tables\Grouping\Group;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 trait CanGroupRecords
 {
@@ -45,5 +46,20 @@ trait CanGroupRecords
         }
 
         return $group->orderQuery($query, $this->tableGroupingDirection ?? 'asc');
+    }
+
+    protected function applyGroupingToTableData(Collection $data): Collection
+    {
+        if ($this->isTableReordering()) {
+            return $data;
+        }
+
+        $group = $this->getTableGrouping();
+
+        if (! $group) {
+            return $data;
+        }
+
+        return $group->orderQuery($data, $this->tableGroupingDirection ?? 'asc');
     }
 }

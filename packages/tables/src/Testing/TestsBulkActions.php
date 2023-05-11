@@ -31,7 +31,7 @@ class TestsBulkActions
             $records = array_map(
                 function ($record) {
                     if ($record instanceof Model) {
-                        return $this->instance()->getTableRecordKey($record);
+                        return $this->instance()->getTable()->getRecordKey($record);
                     }
 
                     return $record;

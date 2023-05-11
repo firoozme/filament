@@ -3,6 +3,7 @@
 namespace Filament\Tables\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 trait CanSortRecords
 {
@@ -123,6 +124,61 @@ trait CanSortRecords
         }
 
         return $query->orderBy($query->getModel()->getQualifiedKeyName());
+    }
+
+    protected function applySortingToTableData(Collection $data): Collection
+    {
+        if ($this->getTable()->isGroupsOnly()) {
+            return $data;
+        }
+
+        if ($this->isTableReordering()) {
+            return $data->sortBy($this->getTable()->getReorderColumn());
+        }
+
+        if (! $this->tableSortColumn) {
+            return $this->applyDefaultSortingToTableData($data);
+        }
+
+        $column = $this->getTable()->getSortableVisibleColumn($this->tableSortColumn);
+
+        if (! $column) {
+            return $this->applyDefaultSortingToTableData($data);
+        }
+
+        $sortDirection = $this->tableSortDirection === 'desc' ? 'desc' : 'asc';
+
+        return $column->applySort($data, $sortDirection);
+    }
+
+    protected function applyDefaultSortingToTableData(Collection $data): Collection
+    {
+        $sortColumnName = $this->getTable()->getDefaultSortColumn();
+        $sortDirection = ($this->getTable()->getDefaultSortDirection() ?? $this->tableSortDirection) === 'desc' ? 'desc' : 'asc';
+
+        if (
+            $sortColumnName &&
+            ($sortColumn = $this->getTable()->getSortableVisibleColumn($sortColumnName))
+        ) {
+            $sortColumn->applySort($data, $sortDirection);
+
+            return $data;
+        }
+
+        if ($sortColumnName) {
+            return $data->sortBy($sortColumnName, descending: $sortDirection === 'desc');
+        }
+
+        $sortQueryUsing = $this->getTable()->getDefaultSortQuery();
+
+        if (! $sortQueryUsing) {
+            return $data;
+        }
+
+        return app()->call($sortQueryUsing, [
+            'direction' => $sortDirection,
+            'query' => $data,
+        ]);
     }
 
     /**

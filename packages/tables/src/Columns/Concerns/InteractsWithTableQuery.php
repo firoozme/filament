@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 
 trait InteractsWithTableQuery
@@ -57,10 +58,10 @@ trait InteractsWithTableQuery
         return $query->with([$this->getRelationshipName()]);
     }
 
-    public function applySearchConstraint(EloquentBuilder $query, string $search, bool &$isFirst): EloquentBuilder
+    public function applySearchConstraint(EloquentBuilder | Collection $query, string $search, bool &$isFirst): EloquentBuilder | Collection
     {
         if ($this->searchQuery) {
-            $whereClause = $isFirst ? 'where' : 'orWhere';
+            $whereClause = ($isFirst || ($query instanceof Collection)) ? 'where' : 'orWhere';
 
             $query->{$whereClause}(
                 fn ($query) => $this->evaluate($this->searchQuery, [
@@ -75,15 +76,19 @@ trait InteractsWithTableQuery
             return $query;
         }
 
-        $model = $query->getModel();
-
         $translatableContentDriver = $this->getLivewire()->makeTableTranslatableContentDriver();
 
         foreach ($this->getSearchColumns() as $searchColumn) {
+            if ($query instanceof Collection) {
+                $query = $query->filter(fn (mixed $record): bool => str(data_get($record, $searchColumn))->lower()->contains(Str::lower($search)));
+
+                continue;
+            }
+
             $whereClause = $isFirst ? 'where' : 'orWhere';
 
             $query->when(
-                $translatableContentDriver?->isAttributeTranslatable($model::class, attribute: $searchColumn),
+                $translatableContentDriver?->isAttributeTranslatable($query->getModel()::class, attribute: $searchColumn),
                 fn (EloquentBuilder $query): EloquentBuilder => $translatableContentDriver->applySearchConstraintToQuery($query, $searchColumn, $search, $whereClause),
                 function (EloquentBuilder $query) use ($search, $searchColumn, $whereClause): EloquentBuilder {
                     /** @var Connection $databaseConnection */
@@ -117,18 +122,22 @@ trait InteractsWithTableQuery
         return $query;
     }
 
-    public function applySort(EloquentBuilder $query, string $direction = 'asc'): EloquentBuilder
+    public function applySort(EloquentBuilder | Collection $query, string $direction = 'asc'): EloquentBuilder | Collection
     {
         if ($this->sortQuery) {
-            $this->evaluate($this->sortQuery, [
+            return $this->evaluate($this->sortQuery, [
                 'direction' => $direction,
                 'query' => $query,
-            ]);
-
-            return $query;
+            ]) ?? $query;
         }
 
         foreach (array_reverse($this->getSortColumns()) as $sortColumn) {
+            if ($query instanceof Collection) {
+                $query = $query->sortBy($sortColumn, descending: $direction === 'desc');
+
+                continue;
+            }
+
             $query->orderBy($this->getSortColumnForQuery($query, $sortColumn), $direction);
         }
 

@@ -5,7 +5,7 @@
     'extraHeadingColumn' => false,
     'groupsOnly' => false,
     'placeholderColumns' => true,
-    'pluralModelLabel',
+    'pluralRecordLabel',
     'records',
     'recordCheckboxPosition' => null,
     'selectionEnabled' => false,
@@ -30,7 +30,7 @@
 
         @if ($extraHeadingColumn)
             <td class="px-4 py-2 whitespace-nowrap text-base font-medium text-gray-600 dark:text-gray-300">
-                {{ __('filament-tables::table.summary.heading', ['label' => $pluralModelLabel]) }}
+                {{ __('filament-tables::table.summary.heading', ['label' => $pluralRecordLabel]) }}
             </td>
         @endif
 
@@ -56,7 +56,7 @@
                 ]) }}>
                     @if ($loop->first && (! $extraHeadingColumn))
                         <span class="text-base">
-                            {{ __('filament-tables::table.summary.heading', ['label' => $pluralModelLabel]) }}
+                            {{ __('filament-tables::table.summary.heading', ['label' => $pluralRecordLabel]) }}
                         </span>
                     @elseif ($hasColumnHeaderLabel)
                         {{ $column->getLabel() }}
@@ -85,7 +85,7 @@
         :actions-position="$actionsPosition"
         :columns="$columns"
         :extra-heading-column="$extraHeadingColumn"
-        :heading="__('filament-tables::table.summary.subheadings.page', ['label' => $pluralModelLabel])"
+        :heading="__('filament-tables::table.summary.subheadings.page', ['label' => $pluralRecordLabel])"
         :selection-enabled="$selectionEnabled"
         :placeholder-columns="$placeholderColumns"
         :query="$query"
@@ -105,7 +105,7 @@
     :actions-position="$actionsPosition"
     :columns="$columns"
     :extra-heading-column="$extraHeadingColumn"
-    :heading="__(($hasPageSummary ? 'filament-tables::table.summary.subheadings.all' : 'filament-tables::table.summary.heading'), ['label' => $pluralModelLabel])"
+    :heading="__(($hasPageSummary ? 'filament-tables::table.summary.subheadings.all' : 'filament-tables::table.summary.heading'), ['label' => $pluralRecordLabel])"
     :groups-only="$groupsOnly"
     :selection-enabled="$selectionEnabled"
     :query="$query"

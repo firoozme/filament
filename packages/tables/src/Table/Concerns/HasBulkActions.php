@@ -118,7 +118,7 @@ trait HasBulkActions
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         ) ?? true;
     }

@@ -4,6 +4,7 @@ namespace Filament\Tables\Filters\Concerns;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 trait InteractsWithTableQuery
 {
@@ -12,7 +13,7 @@ trait InteractsWithTableQuery
     /**
      * @param  array<string, mixed>  $data
      */
-    public function apply(Builder $query, array $data = []): Builder
+    public function apply(Builder | Collection $query, array $data = []): Builder | Collection
     {
         if ($this->isHidden()) {
             return $query;

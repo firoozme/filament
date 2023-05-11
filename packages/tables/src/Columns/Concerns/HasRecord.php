@@ -6,16 +6,16 @@ use Illuminate\Database\Eloquent\Model;
 
 trait HasRecord
 {
-    protected ?Model $record = null;
+    protected mixed $record = null;
 
-    public function record(Model $record): static
+    public function record(mixed $record): static
     {
         $this->record = $record;
 
         return $this;
     }
 
-    public function getRecord(): ?Model
+    public function getRecord(): mixed
     {
         return $this->record ?? $this->getLayout()?->getRecord();
     }

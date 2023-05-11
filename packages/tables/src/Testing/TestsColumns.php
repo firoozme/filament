@@ -388,7 +388,7 @@ class TestsColumns
             $this->assertTableColumnExists($name);
 
             if ($record instanceof Model) {
-                $record = $this->instance()->getTableRecordKey($record);
+                $record = $this->instance()->getTable()->getRecordKey($record);
             }
 
             $this->call('callTableColumnAction', $name, $record);

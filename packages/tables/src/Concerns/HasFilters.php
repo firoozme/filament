@@ -7,6 +7,7 @@ use Filament\Forms\Form;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\Layout;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
  * @property Form $tableFiltersForm
@@ -99,23 +100,37 @@ trait HasFilters
 
     protected function applyFiltersToTableQuery(Builder $query): Builder
     {
-        $data = $this->getTableFiltersForm()->getRawState();
+        $filtersData = $this->getTableFiltersForm()->getRawState();
 
         foreach ($this->getTable()->getFilters() as $filter) {
             $filter->applyToBaseQuery(
                 $query,
-                $data[$filter->getName()] ?? [],
+                $filtersData[$filter->getName()] ?? [],
             );
         }
 
-        return $query->where(function (Builder $query) use ($data) {
+        return $query->where(function (Builder $query) use ($filtersData) {
             foreach ($this->getTable()->getFilters() as $filter) {
                 $filter->apply(
                     $query,
-                    $data[$filter->getName()] ?? [],
+                    $filtersData[$filter->getName()] ?? [],
                 );
             }
         });
+    }
+
+    protected function applyFiltersToTableData(Collection $data): Collection
+    {
+        $filtersData = $this->getTableFiltersForm()->getRawState();
+
+        foreach ($this->getTable()->getFilters() as $filter) {
+            $filter->apply(
+                $data,
+                $data[$filtersData->getName()] ?? [],
+            );
+        }
+
+        return $data;
     }
 
     public function getTableFilterState(string $name): ?array

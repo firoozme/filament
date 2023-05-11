@@ -3,6 +3,7 @@
 namespace Filament\Tables\Concerns;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 
@@ -133,6 +134,80 @@ trait CanSearchRecords
         }
 
         return $query;
+    }
+
+    protected function applySearchToTableData(Collection $data): Collection
+    {
+        $data = $this->applyColumnSearchesToTableData($data);
+        $data = $this->applyGlobalSearchToTableData($data);
+
+        return $data;
+    }
+
+    protected function applyColumnSearchesToTableData(Collection $data): Collection
+    {
+        foreach ($this->getTableColumnSearches() as $column => $search) {
+            if ($search === '') {
+                continue;
+            }
+
+            $column = $this->getTable()->getColumn($column);
+
+            if (! $column) {
+                continue;
+            }
+
+            if ($column->isHidden()) {
+                continue;
+            }
+
+            if (! $column->isIndividuallySearchable()) {
+                continue;
+            }
+
+            foreach (explode(' ', $search) as $searchWord) {
+                $isFirst = true;
+
+                $data = $column->applySearchConstraint(
+                    $data,
+                    $searchWord,
+                    $isFirst,
+                );
+            }
+        }
+
+        return $data;
+    }
+
+    protected function applyGlobalSearchToTableData(Collection $data): Collection
+    {
+        $search = $this->getTableSearch();
+
+        if ($search === '') {
+            return $data;
+        }
+
+        foreach (explode(' ', $search) as $searchWord) {
+            $isFirst = true;
+
+            foreach ($this->getTable()->getColumns() as $column) {
+                if ($column->isHidden()) {
+                    continue;
+                }
+
+                if (! $column->isGloballySearchable()) {
+                    continue;
+                }
+
+                $data = $column->applySearchConstraint(
+                    $data,
+                    $searchWord,
+                    $isFirst,
+                );
+            }
+        }
+
+        return $data;
     }
 
     public function getTableSearch(): string

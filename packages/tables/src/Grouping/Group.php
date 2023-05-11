@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 
 class Group extends Component
 {
@@ -167,7 +168,7 @@ class Group extends Component
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         );
     }
@@ -196,7 +197,7 @@ class Group extends Component
                 ],
                 typedInjections: [
                     Model::class => $record,
-                    $record::class => $record,
+                    is_object($record) ? $record::class : null => $record,
                 ],
             );
         }
@@ -226,7 +227,7 @@ class Group extends Component
         return $query->groupBy($this->getColumn());
     }
 
-    public function orderQuery(EloquentBuilder $query, string $direction): EloquentBuilder
+    public function orderQuery(EloquentBuilder | Collection $query, string $direction): EloquentBuilder | Collection
     {
         if ($this->orderQueryUsing) {
             return $this->evaluate($this->orderQueryUsing, [
@@ -234,6 +235,10 @@ class Group extends Component
                 'direction' => $direction,
                 'query' => $query,
             ]) ?? $query;
+        }
+
+        if ($query instanceof Collection) {
+            return $query->sortBy($this->getRelationshipAttribute(), descending: $direction === 'desc');
         }
 
         return $query->orderBy($this->getSortColumnForQuery($query, $this->getRelationshipAttribute()), $direction);
@@ -287,7 +292,7 @@ class Group extends Component
                 ],
                 typedInjections: [
                     Model::class => $record,
-                    $record::class => $record,
+                    is_object($record) ? $record::class : null => $record,
                 ],
             ) ?? $query;
         }

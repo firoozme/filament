@@ -23,7 +23,7 @@ class DissociateBulkAction extends BulkAction
 
         $this->label(__('filament-actions::dissociate.multiple.label'));
 
-        $this->modalHeading(fn (): string => __('filament-actions::dissociate.multiple.modal.heading', ['label' => $this->getPluralModelLabel()]));
+        $this->modalHeading(fn (): string => __('filament-actions::dissociate.multiple.modal.heading', ['label' => $this->getPluralRecordLabel()]));
 
         $this->modalSubmitActionLabel(__('filament-actions::dissociate.multiple.modal.actions.dissociate.label'));
 

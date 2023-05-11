@@ -17,7 +17,7 @@ trait HasRecordAction
         return $this;
     }
 
-    public function getRecordAction(Model $record): ?string
+    public function getRecordAction(mixed $record): ?string
     {
         $action = $this->evaluate(
             $this->recordAction,
@@ -26,7 +26,7 @@ trait HasRecordAction
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         );
 

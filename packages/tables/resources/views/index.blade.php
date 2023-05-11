@@ -49,7 +49,7 @@
     $hasFiltersAboveContentCollapsible = $hasFilters && ($filtersLayout === FiltersLayout::AboveContentCollapsible);
     $hasFiltersBelowContent = $hasFilters && ($filtersLayout === FiltersLayout::BelowContent);
     $isColumnToggleFormVisible = $hasToggleableColumns();
-    $pluralModelLabel = $getPluralModelLabel();
+    $pluralRecordLabel = $getPluralRecordLabel();
     $records = $isLoaded ? $getRecords() : null;
     $allRecordsCount = $isLoaded ? $getAllRecordsCount() : null;
     $columnsCount = count($columns);
@@ -493,7 +493,7 @@
                                     <x-filament-tables::table class="col-span-full">
                                         <x-filament-tables::summary.row
                                             :columns="$columns"
-                                            :heading="__('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralModelLabel])"
+                                            :heading="__('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralRecordLabel])"
                                             :query="$group->scopeQuery($this->getAllTableSummaryQuery(), $previousRecord)"
                                             :selected-state="$groupedSummarySelectedState[$previousRecordGroupKey] ?? []"
                                             extra-heading-column
@@ -712,7 +712,7 @@
                             <x-filament-tables::table class="col-span-full">
                                 <x-filament-tables::summary.row
                                     :columns="$columns"
-                                    :heading="__('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralModelLabel])"
+                                    :heading="__('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralRecordLabel])"
                                     :query="$group->scopeQuery($this->getAllTableSummaryQuery(), $previousRecord)"
                                     :selected-state="$groupedSummarySelectedState[$previousRecordGroupKey] ?? []"
                                     extra-heading-column
@@ -731,7 +731,7 @@
                     <x-filament-tables::table class="border-t dark:border-gray-700">
                         <x-filament-tables::summary
                             :columns="$columns"
-                            :plural-model-label="$pluralModelLabel"
+                            :plural-model-label="$pluralRecordLabel"
                             :records="$records"
                             extra-heading-column
                             :placeholder-columns="false"
@@ -910,7 +910,7 @@
                                         :actions="count($actions)"
                                         :actions-position="$actionsPosition"
                                         :columns="$columns"
-                                        :heading="$isGroupsOnly ? $previousRecordGroupTitle : __('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralModelLabel])"
+                                        :heading="$isGroupsOnly ? $previousRecordGroupTitle : __('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralRecordLabel])"
                                         :groups-only="$isGroupsOnly"
                                         :selection-enabled="$isSelectionEnabled"
                                         :query="$group->scopeQuery($this->getAllTableSummaryQuery(), $previousRecord)"
@@ -1116,7 +1116,7 @@
                                 :actions="count($actions)"
                                 :actions-position="$actionsPosition"
                                 :columns="$columns"
-                                :heading="$isGroupsOnly ? $previousRecordGroupTitle : __('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralModelLabel])"
+                                :heading="$isGroupsOnly ? $previousRecordGroupTitle : __('filament-tables::table.summary.subheadings.group', ['group' => $previousRecordGroupTitle, 'label' => $pluralRecordLabel])"
                                 :groups-only="$isGroupsOnly"
                                 :selection-enabled="$isSelectionEnabled"
                                 :query="$group->scopeQuery($this->getAllTableSummaryQuery(), $previousRecord)"
@@ -1138,7 +1138,7 @@
                                 :columns="$columns"
                                 :groups-only="$isGroupsOnly"
                                 :selection-enabled="$isSelectionEnabled"
-                                :plural-model-label="$pluralModelLabel"
+                                :plural-model-label="$pluralRecordLabel"
                                 :records="$records"
                                 :record-checkbox-position="$recordCheckboxPosition"
                             />

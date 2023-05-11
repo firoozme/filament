@@ -2,6 +2,8 @@
 
 return [
 
+    'record' => 'record',
+
     'columns' => [
 
         'text' => [

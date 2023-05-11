@@ -196,12 +196,12 @@ trait HasBulkActions
 
     public function getAllTableRecordsCount(): int
     {
-        if ($this->getTable()->selectsCurrentPageOnly()) {
-            return $this->records->count();
+        if ($this->getTable()->hasStaticData() || $this->getTable()->selectsCurrentPageOnly()) {
+            return $this->getTableRecords()->count();
         }
 
-        if ($this->records instanceof LengthAwarePaginator) {
-            return $this->records->total();
+        if ($this->getTableRecords() instanceof LengthAwarePaginator) {
+            return $this->getTableRecords()->total();
         }
 
         $query = $this->getFilteredTableQuery();

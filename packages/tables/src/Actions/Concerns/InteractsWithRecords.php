@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Collection;
 
 trait InteractsWithRecords
 {
-    protected string | Closure | null $modelLabel = null;
+    protected string | Closure | null $recordLabel = null;
 
-    protected string | Closure | null $pluralModelLabel = null;
+    protected string | Closure | null $pluralRecordLabel = null;
 
     protected Collection | Closure | null $records = null;
 
@@ -20,16 +20,16 @@ trait InteractsWithRecords
         return $this;
     }
 
-    public function modelLabel(string | Closure | null $label): static
+    public function recordLabel(string | Closure | null $label): static
     {
-        $this->modelLabel = $label;
+        $this->recordLabel = $label;
 
         return $this;
     }
 
-    public function pluralModelLabel(string | Closure | null $label): static
+    public function pluralRecordLabel(string | Closure | null $label): static
     {
-        $this->pluralModelLabel = $label;
+        $this->pluralRecordLabel = $label;
 
         return $this;
     }
@@ -39,26 +39,26 @@ trait InteractsWithRecords
         return $this->getTable()->getModel();
     }
 
-    public function getModelLabel(): string
+    public function getRecordLabel(): string
     {
-        $label = $this->evaluate($this->modelLabel);
+        $label = $this->evaluate($this->recordLabel);
 
         if (filled($label)) {
             return $label;
         }
 
-        return $this->getTable()->getModelLabel();
+        return $this->getTable()->getRecordLabel();
     }
 
-    public function getPluralModelLabel(): string
+    public function getPluralRecordLabel(): string
     {
-        $label = $this->evaluate($this->pluralModelLabel);
+        $label = $this->evaluate($this->pluralRecordLabel);
 
         if (filled($label)) {
             return $label;
         }
 
-        return $this->getTable()->getPluralModelLabel();
+        return $this->getTable()->getPluralRecordLabel();
     }
 
     public function getRecords(): ?Collection

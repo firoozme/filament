@@ -16,7 +16,7 @@ trait HasRecordUrl
         return $this;
     }
 
-    public function getRecordUrl(Model $record): ?string
+    public function getRecordUrl(mixed $record): ?string
     {
         return $this->evaluate(
             $this->recordUrl,
@@ -25,7 +25,7 @@ trait HasRecordUrl
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         );
     }

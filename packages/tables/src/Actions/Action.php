@@ -30,7 +30,7 @@ class Action extends MountableAction implements Groupable, HasRecord
         }
 
         if ($record = $this->getRecord()) {
-            $recordKey = $this->getLivewire()->getTableRecordKey($record);
+            $recordKey = $this->getTable()->getRecordKey($record);
 
             return "mountTableAction('{$this->getName()}', '{$recordKey}')";
         }
@@ -74,14 +74,14 @@ class Action extends MountableAction implements Groupable, HasRecord
         return $this->getCustomRecordTitle($record) ?? $this->getTable()->getRecordTitle($record);
     }
 
-    public function getModelLabel(): string
+    public function getRecordLabel(): string
     {
-        return $this->getCustomModelLabel() ?? $this->getTable()->getModelLabel();
+        return $this->getCustomRecordLabel() ?? $this->getTable()->getRecordLabel();
     }
 
-    public function getPluralModelLabel(): string
+    public function getPluralRecordLabel(): string
     {
-        return $this->getCustomPluralModelLabel() ?? $this->getTable()->getPluralModelLabel();
+        return $this->getCustomPluralRecordLabel() ?? $this->getTable()->getPluralRecordLabel();
     }
 
     public function getModel(): string

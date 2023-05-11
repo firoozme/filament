@@ -3,10 +3,12 @@
 namespace Filament\Tables\Table\Concerns;
 
 use Closure;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use function Filament\Support\get_model_label;
 use function Filament\Support\locale_has_pluralization;
 use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -14,11 +16,13 @@ trait HasRecords
 {
     protected bool | Closure $allowsDuplicates = false;
 
-    protected string | Closure | null $modelLabel = null;
+    protected string | Closure | null $recordLabel = null;
 
-    protected string | Closure | null $pluralModelLabel = null;
+    protected string | Closure | null $pluralRecordLabel = null;
 
     protected string | Closure | null $recordTitle = null;
+
+    protected string | Closure | null $recordKeyAttribute = null;
 
     protected string | Closure | null $recordTitleAttribute = null;
 
@@ -31,14 +35,28 @@ trait HasRecords
 
     public function modelLabel(string | Closure | null $label): static
     {
-        $this->modelLabel = $label;
+        $this->recordLabel($label);
 
         return $this;
     }
 
     public function pluralModelLabel(string | Closure | null $label): static
     {
-        $this->pluralModelLabel = $label;
+        $this->pluralRecordLabel($label);
+
+        return $this;
+    }
+
+    public function recordLabel(string | Closure | null $label): static
+    {
+        $this->recordLabel = $label;
+
+        return $this;
+    }
+
+    public function pluralRecordLabel(string | Closure | null $label): static
+    {
+        $this->pluralRecordLabel = $label;
 
         return $this;
     }
@@ -57,6 +75,13 @@ trait HasRecords
         return $this;
     }
 
+    public function recordKeyAttribute(string | Closure | null $attribute): static
+    {
+        $this->recordKeyAttribute = $attribute;
+
+        return $this;
+    }
+
     public function getAllRecordsCount(): int
     {
         return $this->getLivewire()->getAllTableRecordsCount();
@@ -67,9 +92,26 @@ trait HasRecords
         return $this->getLivewire()->getTableRecords();
     }
 
-    public function getRecordKey(Model $record): string
+    public function getRecordKey(mixed $record): string
     {
-        return $this->getLivewire()->getTableRecordKey($record);
+        if (! $record instanceof Model) {
+            return data_get(
+                $record,
+                $this->evaluate($this->recordKeyAttribute) ?? 'id',
+            );
+        }
+
+        if (! ($this->getRelationship() instanceof BelongsToMany && $this->allowsDuplicates())) {
+            return $record->getKey();
+        }
+
+        /** @var BelongsToMany $relationship */
+        $relationship = $this->getRelationship();
+
+        $pivotClass = $relationship->getPivotClass();
+        $pivotKeyName = app($pivotClass)->getKeyName();
+
+        return $record->getAttributeValue($pivotKeyName);
     }
 
     public function getModel(): string
@@ -82,24 +124,32 @@ trait HasRecords
         return (bool) $this->evaluate($this->allowsDuplicates);
     }
 
-    public function getModelLabel(): string
+    public function getRecordLabel(): string
     {
-        return $this->evaluate($this->modelLabel) ?? get_model_label($this->getModel());
+        if (filled($recordLabel = $this->evaluate($this->recordLabel))) {
+            return $recordLabel;
+        }
+
+        if ($this->hasStaticData()) {
+            return __('filament-tables::table.record');
+        }
+
+        return get_model_label($this->getModel());
     }
 
-    public function getPluralModelLabel(): string
+    public function getPluralRecordLabel(): string
     {
-        $label = $this->evaluate($this->pluralModelLabel);
+        $label = $this->evaluate($this->pluralRecordLabel);
 
         if (filled($label)) {
             return $label;
         }
 
         if (locale_has_pluralization()) {
-            return Str::plural($this->getModelLabel());
+            return Str::plural($this->getRecordLabel());
         }
 
-        return $this->getModelLabel();
+        return $this->getRecordLabel();
     }
 
     public function getRecordTitle(Model $record): string
@@ -111,7 +161,7 @@ trait HasRecords
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         );
 
@@ -126,10 +176,10 @@ trait HasRecords
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         );
 
-        return $record->getAttributeValue($titleAttribute) ?? $this->getModelLabel();
+        return $record->getAttributeValue($titleAttribute) ?? $this->getRecordLabel();
     }
 }

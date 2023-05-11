@@ -25,7 +25,7 @@ class TestsActions
             $name = $this->parseNestedActionName($name);
 
             if ($record instanceof Model) {
-                $record = $this->instance()->getTableRecordKey($record);
+                $record = $this->instance()->getTable()->getRecordKey($record);
             }
 
             /** @phpstan-ignore-next-line */

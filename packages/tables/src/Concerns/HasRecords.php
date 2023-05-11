@@ -4,9 +4,10 @@ namespace Filament\Tables\Concerns;
 
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Collection;
 use function Livewire\invade;
 
 trait HasRecords
@@ -54,7 +55,29 @@ trait HasRecords
         return $query;
     }
 
-    protected function hydratePivotRelationForTableRecords(Collection | Paginator $records): Collection | Paginator
+    public function getFilteredTableData(): Collection
+    {
+        $data = $this->getTable()->getData();
+
+        $data = $this->applyFiltersToTableData($data);
+
+        $data = $this->applySearchToTableData($data);
+
+        return $data;
+    }
+
+    public function getFilteredSortedTableData(): Collection
+    {
+        $data = $this->getFilteredTableData();
+
+        $data = $this->applyGroupingToTableData($data);
+
+        $data = $this->applySortingToTableData($data);
+
+        return $data;
+    }
+
+    protected function hydratePivotRelationForTableRecords(EloquentCollection| Paginator $records): EloquentCollection| Paginator
     {
         $table = $this->getTable();
         $relationship = $table->getRelationship();
@@ -70,6 +93,10 @@ trait HasRecords
     {
         if ($this->records) {
             return $this->records;
+        }
+
+        if ($this->getTable()->hasStaticData()) {
+            return $this->records = $this->getFilteredSortedTableData();
         }
 
         $query = $this->getFilteredSortedTableQuery();
@@ -114,23 +141,6 @@ trait HasRecords
     public function getTableRecord(?string $key): ?Model
     {
         return $this->resolveTableRecord($key);
-    }
-
-    public function getTableRecordKey(Model $record): string
-    {
-        $table = $this->getTable();
-
-        if (! ($table->getRelationship() instanceof BelongsToMany && $table->allowsDuplicates())) {
-            return $record->getKey();
-        }
-
-        /** @var BelongsToMany $relationship */
-        $relationship = $table->getRelationship();
-
-        $pivotClass = $relationship->getPivotClass();
-        $pivotKeyName = app($pivotClass)->getKeyName();
-
-        return $record->getAttributeValue($pivotKeyName);
     }
 
     /**

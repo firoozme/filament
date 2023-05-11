@@ -26,7 +26,7 @@ trait HasRecordClasses
     /**
      * @return array<string | int, bool | string>
      */
-    public function getRecordClasses(Model $record): array
+    public function getRecordClasses(mixed $record): array
     {
         return Arr::wrap($this->evaluate(
             $this->recordClasses,
@@ -35,7 +35,7 @@ trait HasRecordClasses
             ],
             typedInjections: [
                 Model::class => $record,
-                $record::class => $record,
+                is_object($record) ? $record::class : null => $record,
             ],
         ) ?? []);
     }
