@@ -4,17 +4,14 @@ namespace Filament\Tables\DataProviders;
 
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
-use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use function Livewire\invade;
 
 class EloquentDataProvider implements DataProvider
@@ -83,8 +80,8 @@ class EloquentDataProvider implements DataProvider
     }
 
     /**
-     * @param array<BaseFilter> $filters
-     * @param array<string, mixed> $filtersData
+     * @param  array<BaseFilter>  $filters
+     * @param  array<string, mixed>  $filtersData
      */
     public function applyFilters(array $filters, array $filtersData): static
     {
@@ -101,7 +98,7 @@ class EloquentDataProvider implements DataProvider
     }
 
     /**
-     * @param array<Column> $columns
+     * @param  array<Column>  $columns
      */
     public function applyGlobalSearchConstraint(array $columns, string $search): static
     {

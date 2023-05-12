@@ -2,8 +2,6 @@
 
 namespace Filament\Tables\Columns\Concerns;
 
-use Illuminate\Database\Eloquent\Model;
-
 trait HasRecord
 {
     protected mixed $record = null;

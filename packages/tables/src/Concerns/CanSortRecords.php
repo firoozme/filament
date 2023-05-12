@@ -3,9 +3,6 @@
 namespace Filament\Tables\Concerns;
 
 use Filament\Tables\DataProviders\DataProvider;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
 
 trait CanSortRecords
 {

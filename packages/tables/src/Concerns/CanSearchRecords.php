@@ -4,8 +4,6 @@ namespace Filament\Tables\Concerns;
 
 use Filament\Tables\Columns\Column;
 use Filament\Tables\DataProviders\DataProvider;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 use RecursiveArrayIterator;
 use RecursiveIteratorIterator;
 

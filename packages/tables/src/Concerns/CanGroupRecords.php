@@ -4,8 +4,6 @@ namespace Filament\Tables\Concerns;
 
 use Filament\Tables\DataProviders\DataProvider;
 use Filament\Tables\Grouping\Group;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 trait CanGroupRecords
 {
