@@ -93,7 +93,7 @@ class ListRecords extends Page implements Tables\Contracts\HasTable
         $action
             ->authorize($resource::canCreate())
             ->model($this->getModel())
-            ->modelLabel($this->getModelLabel())
+            ->recordLabel($this->getTable()->getRecordLabel())
             ->form(fn (Form $form): Form => $this->form($form->columns(2)));
 
         if ($resource::hasPage('create')) {
@@ -218,8 +218,8 @@ class ListRecords extends Page implements Tables\Contracts\HasTable
     {
         return $this->makeBaseTable()
             ->query(fn (): Builder => $this->getTableQuery())
-            ->modelLabel($this->getModelLabel() ?? static::getResource()::getModelLabel())
-            ->pluralModelLabel($this->getPluralModelLabel() ?? static::getResource()::getPluralModelLabel())
+            ->recordLabel($this->getModelLabel() ?? static::getResource()::getModelLabel())
+            ->pluralRecordLabel($this->getPluralModelLabel() ?? static::getResource()::getPluralModelLabel())
             ->recordAction(function (Model $record, Table $table): ?string {
                 foreach (['view', 'edit'] as $action) {
                     $action = $table->getAction($action);

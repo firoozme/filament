@@ -6,10 +6,12 @@ use Filament\Tables\Columns\Column;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Contracts\Pagination\Paginator as PaginatorContract;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use function Livewire\invade;
@@ -31,12 +33,29 @@ class CollectionDataProvider implements DataProvider
         return app(static::class, ['table' => $table]);
     }
 
-    public function getRecords(): Collection
+    public function getRecords(): Collection | PaginatorContract
     {
-        return $this->records;
+        if (
+            (! $this->table->isPaginated()) ||
+            ($this->table->isReordering() && (! $this->table->isPaginatedWhileReordering()))
+        ) {
+            return $this->records;
+        }
+
+        $page = Paginator::resolveCurrentPage();
+
+        $perPage = $this->table->getRecordsPerPage();
+        $perPage = $perPage === 'all' ? $this->records->count() : $perPage;
+
+        return new LengthAwarePaginator(
+            $this->records->forPage($page, $perPage),
+            $this->records->count(),
+            $perPage,
+            $page,
+        );
     }
 
-    public function hydratePivotRelation(Collection | Paginator $records): Collection
+    public function hydratePivotRelation(Collection |PaginatorContract $records): Collection
     {
         return $records;
     }

@@ -14,9 +14,9 @@ trait InteractsWithRecord
 
     protected string | Closure | null $model = null;
 
-    protected string | Closure | null $modelLabel = null;
+    protected string | Closure | null $recordLabel = null;
 
-    protected string | Closure | null $pluralModelLabel = null;
+    protected string | Closure | null $pluralRecordLabel = null;
 
     protected string | Closure | null $recordTitle = null;
 
@@ -34,16 +34,30 @@ trait InteractsWithRecord
         return $this;
     }
 
+    public function recordLabel(string | Closure | null $label): static
+    {
+        $this->recordLabel = $label;
+
+        return $this;
+    }
+
+    public function pluralRecordLabel(string | Closure | null $label): static
+    {
+        $this->pluralRecordLabel = $label;
+
+        return $this;
+    }
+
     public function modelLabel(string | Closure | null $label): static
     {
-        $this->modelLabel = $label;
+        $this->recordLabel($label);
 
         return $this;
     }
 
     public function pluralModelLabel(string | Closure | null $label): static
     {
-        $this->pluralModelLabel = $label;
+        $this->pluralRecordLabel($label);
 
         return $this;
     }
@@ -62,7 +76,7 @@ trait InteractsWithRecord
 
     public function getRecordTitle(?Model $record = null): ?string
     {
-        return $this->getCustomRecordTitle($record) ?? $this->getModelLabel();
+        return $this->getCustomRecordTitle($record) ?? $this->getRecordLabel();
     }
 
     public function getCustomRecordTitle(?Model $record = null): ?string
@@ -103,9 +117,9 @@ trait InteractsWithRecord
         return $this->evaluate($this->model);
     }
 
-    public function getModelLabel(): ?string
+    public function getRecordLabel(): ?string
     {
-        $label = $this->getCustomModelLabel();
+        $label = $this->getCustomRecordLabel();
 
         if (filled($label)) {
             return $label;
@@ -120,20 +134,20 @@ trait InteractsWithRecord
         return get_model_label($model);
     }
 
-    public function getCustomModelLabel(): ?string
+    public function getCustomRecordLabel(): ?string
     {
-        return $this->evaluate($this->modelLabel);
+        return $this->evaluate($this->recordLabel);
     }
 
-    public function getPluralModelLabel(): ?string
+    public function getPluralRecordLabel(): ?string
     {
-        $label = $this->getCustomPluralModelLabel();
+        $label = $this->getCustomPluralRecordLabel();
 
         if (filled($label)) {
             return $label;
         }
 
-        $singularLabel = $this->getModelLabel();
+        $singularLabel = $this->getRecordLabel();
 
         if (blank($singularLabel)) {
             return null;
@@ -146,9 +160,9 @@ trait InteractsWithRecord
         return $singularLabel;
     }
 
-    public function getCustomPluralModelLabel(): ?string
+    public function getCustomPluralRecordLabel(): ?string
     {
-        return $this->evaluate($this->pluralModelLabel);
+        return $this->evaluate($this->pluralRecordLabel);
     }
 
     /**

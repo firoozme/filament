@@ -21,8 +21,6 @@ class EloquentDataProvider implements DataProvider
 {
     protected Builder $query;
 
-    protected Collection | Paginator | null $records = null;
-
     protected Table $table;
 
     final public function __construct(Table $table, ?Builder $query = null)
@@ -38,18 +36,14 @@ class EloquentDataProvider implements DataProvider
 
     public function getRecords(): Collection | Paginator
     {
-        if ($this->records) {
-            return $this->records;
-        }
-
         if (
             (! $this->table->isPaginated()) ||
             ($this->table->isReordering() && (! $this->table->isPaginatedWhileReordering()))
         ) {
-            return $this->records = $this->hydratePivotRelation($this->query->get());
+            return $this->hydratePivotRelation($this->query->get());
         }
 
-        return $this->records = $this->hydratePivotRelation($this->paginateTableQuery($this->query));
+        return $this->hydratePivotRelation($this->paginateTableQuery($this->query));
     }
 
     protected function paginateTableQuery(Builder $query): Paginator
@@ -109,7 +103,7 @@ class EloquentDataProvider implements DataProvider
             $isFirst = true;
 
             foreach ($columns as $column) {
-                $this->applySearchConstraint(
+                $this->applyColumnSearchConstraint(
                     $query,
                     $column,
                     $search,
@@ -126,7 +120,7 @@ class EloquentDataProvider implements DataProvider
         $this->query->where(function (Builder $query) use ($column, $search) {
             $isFirst = true;
 
-            $this->applySearchConstraint(
+            $this->applyColumnSearchConstraint(
                 $query,
                 $column,
                 $search,
@@ -137,7 +131,7 @@ class EloquentDataProvider implements DataProvider
         return $this;
     }
 
-    public function applySearchConstraint(Builder $query, Column $column, string $search, bool &$isFirst): static
+    public function applyColumnSearchConstraint(Builder $query, Column $column, string $search, bool &$isFirst): static
     {
         if ($searchUsing = $column->getSearchUsing()) {
             $whereClause = $isFirst ? 'where' : 'orWhere';
