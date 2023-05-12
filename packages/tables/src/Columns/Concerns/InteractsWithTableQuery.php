@@ -2,7 +2,9 @@
 
 namespace Filament\Tables\Columns\Concerns;
 
+use Closure;
 use Exception;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
@@ -58,96 +60,45 @@ trait InteractsWithTableQuery
         return $query->with([$this->getRelationshipName()]);
     }
 
-    public function applySearchConstraint(EloquentBuilder | Collection $query, string $search, bool &$isFirst): EloquentBuilder | Collection
+    public function getSearchUsing(): ?Closure
     {
-        if ($this->searchQuery) {
-            $whereClause = ($isFirst || ($query instanceof Collection)) ? 'where' : 'orWhere';
-
-            $query->{$whereClause}(
-                fn ($query) => $this->evaluate($this->searchQuery, [
-                    'query' => $query,
-                    'search' => $search,
-                    'searchQuery' => $search,
-                ]),
-            );
-
-            $isFirst = false;
-
-            return $query;
-        }
-
-        $translatableContentDriver = $this->getLivewire()->makeTableTranslatableContentDriver();
-
-        foreach ($this->getSearchColumns() as $searchColumn) {
-            if ($query instanceof Collection) {
-                $query = $query->filter(fn (mixed $record): bool => str(data_get($record, $searchColumn))->lower()->contains(Str::lower($search)));
-
-                continue;
-            }
-
-            $whereClause = $isFirst ? 'where' : 'orWhere';
-
-            $query->when(
-                $translatableContentDriver?->isAttributeTranslatable($query->getModel()::class, attribute: $searchColumn),
-                fn (EloquentBuilder $query): EloquentBuilder => $translatableContentDriver->applySearchConstraintToQuery($query, $searchColumn, $search, $whereClause),
-                function (EloquentBuilder $query) use ($search, $searchColumn, $whereClause): EloquentBuilder {
-                    /** @var Connection $databaseConnection */
-                    $databaseConnection = $query->getConnection();
-
-                    $searchOperator = match ($databaseConnection->getDriverName()) {
-                        'pgsql' => 'ilike',
-                        default => 'like',
-                    };
-
-                    return $query->when(
-                        $this->queriesRelationships($query->getModel()),
-                        fn (EloquentBuilder $query): EloquentBuilder => $query->{"{$whereClause}Relation"}(
-                            $this->getRelationshipName(),
-                            $searchColumn,
-                            $searchOperator,
-                            "%{$search}%",
-                        ),
-                        fn (EloquentBuilder $query): EloquentBuilder => $query->{$whereClause}(
-                            $searchColumn,
-                            $searchOperator,
-                            "%{$search}%",
-                        ),
-                    );
-                },
-            );
-
-            $isFirst = false;
-        }
-
-        return $query;
+        return $this->searchUsing;
     }
 
-    public function applySort(EloquentBuilder | Collection $query, string $direction = 'asc'): EloquentBuilder | Collection
+    public function applySort(DataProvider $data, string $direction = 'asc'): DataProvider
     {
-        if ($this->sortQuery) {
-            return $this->evaluate($this->sortQuery, [
-                'direction' => $direction,
-                'query' => $query,
-            ]) ?? $query;
+        if ($this->sortUsing) {
+            return $this->evaluate(
+                $this->sortUsing,
+                namedInjections: [
+                    ...$data->getDefaultClosureDependenciesForEvaluationByName(),
+                    'dataProvider' => $data,
+                    'direction' => $direction,
+                ],
+                typedInjections: [
+                    ...$data->getDefaultClosureDependenciesForEvaluationByType(),
+                    DataProvider::class => $data,
+                ],
+            ) ?? $data;
         }
+
+        $query = $data->getEloquentQuery();
 
         foreach (array_reverse($this->getSortColumns()) as $sortColumn) {
-            if ($query instanceof Collection) {
-                $query = $query->sortBy($sortColumn, descending: $direction === 'desc');
-
-                continue;
+            if ($query) {
+                $sortColumn = $this->getSortColumnForEloquentQuery($query, $sortColumn);
             }
 
-            $query->orderBy($this->getSortColumnForQuery($query, $sortColumn), $direction);
+            $data->order($sortColumn, $direction);
         }
 
-        return $query;
+        return $data;
     }
 
     /**
      * @param  array<string> | null  $relationships
      */
-    protected function getSortColumnForQuery(EloquentBuilder $query, string $sortColumn, ?array $relationships = null): string | Builder
+    protected function getSortColumnForEloquentQuery(EloquentBuilder $query, string $sortColumn, ?array $relationships = null): string | Builder
     {
         $relationships ??= ($relationshipName = $this->getRelationshipName()) ?
             explode('.', $relationshipName) :
@@ -167,7 +118,7 @@ trait InteractsWithTableQuery
             ->getRelationExistenceQuery(
                 $relatedQuery,
                 $query,
-                [$currentRelationshipName => $this->getSortColumnForQuery(
+                [$currentRelationshipName => $this->getSortColumnForEloquentQuery(
                     $relatedQuery,
                     $sortColumn,
                     $relationships,

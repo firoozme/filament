@@ -5,6 +5,7 @@ namespace Filament\Tables\Grouping;
 use Closure;
 use Filament\Support\Components\Component;
 use Filament\Support\Contracts\HasLabel as LabelInterface;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -22,7 +23,7 @@ class Group extends Component
 
     protected ?Closure $groupQueryUsing = null;
 
-    protected ?Closure $orderQueryUsing = null;
+    protected ?Closure $orderDataUsing = null;
 
     protected ?Closure $scopeQueryUsing = null;
 
@@ -103,9 +104,9 @@ class Group extends Component
         return $this;
     }
 
-    public function orderQueryUsing(?Closure $callback): static
+    public function orderDataUsing(?Closure $callback): static
     {
-        $this->orderQueryUsing = $callback;
+        $this->orderDataUsing = $callback;
 
         return $this;
     }
@@ -227,27 +228,39 @@ class Group extends Component
         return $query->groupBy($this->getColumn());
     }
 
-    public function orderQuery(EloquentBuilder | Collection $query, string $direction): EloquentBuilder | Collection
+    public function orderData(DataProvider $data, string $direction): DataProvider
     {
-        if ($this->orderQueryUsing) {
-            return $this->evaluate($this->orderQueryUsing, [
-                'column' => $this->getColumn(),
-                'direction' => $direction,
-                'query' => $query,
-            ]) ?? $query;
+        if ($this->orderDataUsing) {
+            return $this->evaluate(
+                $this->orderDataUsing,
+                namedInjections: [
+                    ...$data->getDefaultClosureDependenciesForEvaluationByName(),
+                    'column' => $this->getColumn(),
+                    'dataProvider' => $data,
+                    'direction' => $direction,
+                ],
+                typedInjections: [
+                    ...$data->getDefaultClosureDependenciesForEvaluationByType(),
+                    DataProvider::class => $data,
+                ],
+            ) ?? $data;
         }
 
-        if ($query instanceof Collection) {
-            return $query->sortBy($this->getRelationshipAttribute(), descending: $direction === 'desc');
+        $attribute = $this->getRelationshipAttribute();
+
+        if ($query = $data->getEloquentQuery()) {
+            $attribute = $this->getSortColumnForEloquentQuery($query, $attribute);
         }
 
-        return $query->orderBy($this->getSortColumnForQuery($query, $this->getRelationshipAttribute()), $direction);
+        $data->order($attribute, $direction);
+
+        return $data;
     }
 
     /**
      * @param  array<string> | null  $relationships
      */
-    protected function getSortColumnForQuery(EloquentBuilder $query, string $sortColumn, ?array $relationships = null, ?Relation $lastRelationship = null): string | Builder
+    protected function getSortColumnForEloquentQuery(EloquentBuilder $query, string $sortColumn, ?array $relationships = null, ?Relation $lastRelationship = null): string | Builder
     {
         $relationships ??= ($relationshipName = $this->getRelationshipName()) ?
             explode('.', $relationshipName) :
@@ -267,7 +280,7 @@ class Group extends Component
             ->getRelationExistenceQuery(
                 $relatedQuery,
                 $query,
-                [$currentRelationshipName => $this->getSortColumnForQuery(
+                [$currentRelationshipName => $this->getSortColumnForEloquentQuery(
                     $relatedQuery,
                     $sortColumn,
                     $relationships,

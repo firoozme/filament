@@ -44,7 +44,7 @@ class AttachAction extends Action
 
         $this->label(__('filament-actions::attach.single.label'));
 
-        $this->modalHeading(fn (): string => __('filament-actions::attach.single.modal.heading', ['label' => $this->getRecordLabel()]));
+        $this->modalHeading(fn (): string => __('filament-actions::attach.single.modal.heading', ['label' => $this->getModelLabel()]));
 
         $this->modalSubmitActionLabel(__('filament-actions::attach.single.modal.actions.attach.label'));
 

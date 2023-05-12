@@ -2,6 +2,7 @@
 
 namespace Filament\Tables\Concerns;
 
+use Filament\Tables\DataProviders\DataProvider;
 use Filament\Tables\Grouping\Group;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -33,22 +34,7 @@ trait CanGroupRecords
         $this->resetPage();
     }
 
-    protected function applyGroupingToTableQuery(Builder $query): Builder
-    {
-        if ($this->isTableReordering()) {
-            return $query;
-        }
-
-        $group = $this->getTableGrouping();
-
-        if (! $group) {
-            return $query;
-        }
-
-        return $group->orderQuery($query, $this->tableGroupingDirection ?? 'asc');
-    }
-
-    protected function applyGroupingToTableData(Collection $data): Collection
+    protected function applyGroupingToTableData(DataProvider $data): DataProvider
     {
         if ($this->isTableReordering()) {
             return $data;
@@ -60,6 +46,8 @@ trait CanGroupRecords
             return $data;
         }
 
-        return $group->orderQuery($data, $this->tableGroupingDirection ?? 'asc');
+        $group->orderData($data, $this->tableGroupingDirection ?? 'asc');
+
+        return $data;
     }
 }

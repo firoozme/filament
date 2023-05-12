@@ -2,6 +2,7 @@
 
 namespace Filament\Tables\Concerns;
 
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Contracts\Pagination\Paginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
@@ -17,67 +18,47 @@ trait HasRecords
      */
     protected bool $allowsDuplicates = false;
 
-    protected Collection | Paginator | null $records = null;
+    protected Collection | Paginator $records;
 
-    public function getFilteredTableQuery(): Builder
+    public function getFilteredTableData(): DataProvider
     {
-        $query = $this->getTable()->getQuery();
+        $data = $this->getTable()->getDataProvider();
 
-        $this->applyFiltersToTableQuery($query);
+        $this->applyFiltersToTableData($data);
 
-        $this->applySearchToTableQuery($query);
+        $this->applySearchToTableData($data);
 
-        foreach ($this->getTable()->getColumns() as $column) {
-            if ($column->isHidden()) {
-                continue;
+        if ($query = $data->getEloquentQuery()) {
+            foreach ($this->getTable()->getColumns() as $column) {
+                if ($column->isHidden()) {
+                    continue;
+                }
+
+                $column->applyRelationshipAggregates($query);
+
+                if ($this->getTable()->isGroupsOnly()) {
+                    continue;
+                }
+
+                $column->applyEagerLoading($query);
             }
-
-            $column->applyRelationshipAggregates($query);
-
-            if ($this->getTable()->isGroupsOnly()) {
-                continue;
-            }
-
-            $column->applyEagerLoading($query);
         }
-
-        return $query;
-    }
-
-    public function getFilteredSortedTableQuery(): Builder
-    {
-        $query = $this->getFilteredTableQuery();
-
-        $this->applyGroupingToTableQuery($query);
-
-        $this->applySortingToTableQuery($query);
-
-        return $query;
-    }
-
-    public function getFilteredTableData(): Collection
-    {
-        $data = $this->getTable()->getData();
-
-        $data = $this->applyFiltersToTableData($data);
-
-        $data = $this->applySearchToTableData($data);
 
         return $data;
     }
 
-    public function getFilteredSortedTableData(): Collection
+    public function getFilteredSortedTableData(): DataProvider
     {
         $data = $this->getFilteredTableData();
 
-        $data = $this->applyGroupingToTableData($data);
+        $this->applyGroupingToTableData($data);
 
-        $data = $this->applySortingToTableData($data);
+        $this->applySortingToTableData($data);
 
         return $data;
     }
 
-    protected function hydratePivotRelationForTableRecords(EloquentCollection| Paginator $records): EloquentCollection| Paginator
+    protected function hydratePivotRelationForTableRecords(EloquentCollection | Paginator $records): EloquentCollection| Paginator
     {
         $table = $this->getTable();
         $relationship = $table->getRelationship();
@@ -91,24 +72,7 @@ trait HasRecords
 
     public function getTableRecords(): Collection | Paginator
     {
-        if ($this->records) {
-            return $this->records;
-        }
-
-        if ($this->getTable()->hasStaticData()) {
-            return $this->records = $this->getFilteredSortedTableData();
-        }
-
-        $query = $this->getFilteredSortedTableQuery();
-
-        if (
-            (! $this->getTable()->isPaginated()) ||
-            ($this->isTableReordering() && (! $this->getTable()->isPaginatedWhileReordering()))
-        ) {
-            return $this->records = $this->hydratePivotRelationForTableRecords($query->get());
-        }
-
-        return $this->records = $this->hydratePivotRelationForTableRecords($this->paginateTableQuery($query));
+        return $this->records ??= $this->getFilteredSortedTableData()->getRecords();
     }
 
     protected function resolveTableRecord(?string $key): ?Model

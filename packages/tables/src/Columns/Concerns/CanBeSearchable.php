@@ -18,14 +18,14 @@ trait CanBeSearchable
      */
     protected ?array $searchColumns = null;
 
-    protected ?Closure $searchQuery = null;
+    protected ?Closure $searchUsing = null;
 
     /**
      * @param  bool | array<string> | string  $condition
      */
     public function searchable(
         bool | array | string $condition = true,
-        ?Closure $query = null,
+        ?Closure $using = null,
         bool $isIndividual = false,
         bool $isGlobal = true,
     ): static {
@@ -39,7 +39,7 @@ trait CanBeSearchable
 
         $this->isGloballySearchable = $isGlobal;
         $this->isIndividuallySearchable = $isIndividual;
-        $this->searchQuery = $query;
+        $this->searchUsing = $using;
 
         return $this;
     }

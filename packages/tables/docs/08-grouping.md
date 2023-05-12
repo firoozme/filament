@@ -184,7 +184,7 @@ public function table(Table $table): Table
     return $table
         ->groups([
             Group::make('status')
-                ->orderQueryUsing(fn (Builder $query, string $direction) => $query->orderBy('status', $direction)),
+                ->orderDataUsing(fn (Builder $query, string $direction) => $query->orderBy('status', $direction)),
         ]);
 }
 ```

@@ -2,6 +2,7 @@
 
 namespace Filament\Tables\Filters;
 
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
@@ -25,9 +26,9 @@ class TrashedFilter extends TernaryFilter
         $this->falseLabel(__('filament-tables::table.filters.trashed.only_trashed'));
 
         $this->queries(
-            true: fn ($query) => $query->withTrashed(),
-            false: fn ($query) => $query->onlyTrashed(),
-            blank: fn ($query) => $query->withoutTrashed(),
+            true: fn (DataProvider $dataProvider) => $dataProvider->withTrashed(),
+            false: fn (DataProvider $dataProvider) => $dataProvider->onlyTrashed(),
+            blank: fn (DataProvider $dataProvider) => $dataProvider->withoutTrashed(),
         );
 
         $this->indicateUsing(function (array $state): array {
@@ -46,7 +47,7 @@ class TrashedFilter extends TernaryFilter
     /**
      * @param  array<string, mixed>  $data
      */
-    public function applyToBaseQuery(Builder $query, array $data = []): Builder
+    public function applyToBaseEloquentQuery(Builder $query, array $data = []): Builder
     {
         $query->withoutGlobalScopes([
             SoftDeletingScope::class,

@@ -4,6 +4,7 @@ namespace Filament\Tables\Filters;
 
 use Closure;
 use Filament\Forms\Components\Select;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
 
 class TernaryFilter extends SelectFilter
@@ -72,29 +73,8 @@ class TernaryFilter extends SelectFilter
     public function nullable(): static
     {
         $this->queries(
-            true: function (Builder $query): Builder {
-                if ($this->queriesRelationships()) {
-                    return $query->whereRelation(
-                        $this->getRelationshipName(),
-                        $this->getRelationshipTitleAttribute(),
-                        '!=',
-                        null,
-                    );
-                }
-
-                return $query->whereNotNull($this->getAttribute());
-            },
-            false: function (Builder $query): Builder {
-                if ($this->queriesRelationships()) {
-                    return $query->whereRelation(
-                        $this->getRelationshipName(),
-                        $this->getRelationshipTitleAttribute(),
-                        null,
-                    );
-                }
-
-                return $query->whereNull($this->getAttribute());
-            },
+            true: fn (DataProvider $data) => $data->whereNotNull($this->getAttribute()),
+            false: fn (DataProvider $data) => $data->whereNull($this->getAttribute()),
         );
 
         return $this;
@@ -103,28 +83,8 @@ class TernaryFilter extends SelectFilter
     public function boolean(): static
     {
         $this->queries(
-            true: function (Builder $query): Builder {
-                if ($this->queriesRelationships()) {
-                    return $query->whereRelation(
-                        $this->getRelationshipName(),
-                        $this->getRelationshipTitleAttribute(),
-                        true,
-                    );
-                }
-
-                return $query->where($this->getAttribute(), true);
-            },
-            false: function (Builder $query): Builder {
-                if ($this->queriesRelationships()) {
-                    return $query->whereRelation(
-                        $this->getRelationshipName(),
-                        $this->getRelationshipTitleAttribute(),
-                        false,
-                    );
-                }
-
-                return $query->where($this->getAttribute(), false);
-            },
+            true: fn (DataProvider $data) => $data->where($this->getAttribute(), true),
+            false: fn (DataProvider $data) => $data->where($this->getAttribute(), false),
         );
 
         return $this;
@@ -132,14 +92,22 @@ class TernaryFilter extends SelectFilter
 
     public function queries(Closure $true, Closure $false, Closure $blank = null): static
     {
-        $this->query(function (Builder $query, array $data) use ($blank, $false, $true) {
-            if (blank($data['value'] ?? null)) {
-                return $blank instanceof Closure
-                    ? $blank($query, $data)
-                    : $query;
+        $this->query(function (DataProvider $dataProvider, array $state) use ($blank, $false, $true) {
+            if (blank($state['value'] ?? null)) {
+                if ($blank instanceof Closure) {
+                    $this->modifyData($blank, $dataProvider, $state);
+                }
+
+                return;
             }
 
-            return $data['value'] ? $true($query, $data) : $false($query, $data);
+            if ($state['value']) {
+                $this->modifyData($true, $dataProvider, $state);
+
+                return;
+            }
+
+            $this->modifyData($false, $dataProvider, $state);
         });
 
         return $this;

@@ -79,4 +79,9 @@ trait CanPaginateRecords
     {
         return (bool) $this->evaluate($this->isPaginatedWhileReordering);
     }
+
+    public function getRecordsPerPage(): int | string | null
+    {
+        return $this->getLivewire()->getTableRecordsPerPage();
+    }
 }

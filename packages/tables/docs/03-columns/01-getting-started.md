@@ -95,7 +95,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
 TextColumn::make('full_name')
-    ->sortable(query: function (Builder $query, string $direction): Builder {
+    ->sortable(using: function (Builder $query, string $direction): Builder {
         return $query
             ->orderBy('last_name', $direction)
             ->orderBy('first_name', $direction);
@@ -163,7 +163,7 @@ use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
 TextColumn::make('full_name')
-    ->searchable(query: function (Builder $query, string $search): Builder {
+    ->searchable(using: function (Builder $query, string $search): Builder {
         return $query
             ->where('first_name', 'like', "%{$search}%")
             ->where('last_name', 'like', "%{$search}%");

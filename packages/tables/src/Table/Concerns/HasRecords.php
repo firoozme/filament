@@ -3,6 +3,9 @@
 namespace Filament\Tables\Table\Concerns;
 
 use Closure;
+use Filament\Tables\DataProviders\CollectionDataProvider;
+use Filament\Tables\DataProviders\DataProvider;
+use Filament\Tables\DataProviders\EloquentDataProvider;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use function Filament\Support\get_model_label;
@@ -25,6 +28,8 @@ trait HasRecords
     protected string | Closure | null $recordKeyAttribute = null;
 
     protected string | Closure | null $recordTitleAttribute = null;
+
+    protected string | Closure | null $dataProvider = null;
 
     public function allowDuplicates(bool | Closure $condition = true): static
     {
@@ -85,6 +90,21 @@ trait HasRecords
     public function getAllRecordsCount(): int
     {
         return $this->getLivewire()->getAllTableRecordsCount();
+    }
+
+    public function getDataProvider(): DataProvider
+    {
+        $dataProvider = $this->evaluate($this->dataProvider);
+
+        if ($dataProvider) {
+            return $dataProvider::make($this);
+        }
+
+        if ($this->hasStaticData()) {
+            return CollectionDataProvider::make($this);
+        }
+
+        return EloquentDataProvider::make($this);
     }
 
     public function getRecords(): Collection | Paginator

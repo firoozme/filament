@@ -2,6 +2,8 @@
 
 namespace Filament\Tables\Concerns;
 
+use Filament\Tables\Columns\Column;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use RecursiveArrayIterator;
@@ -58,15 +60,15 @@ trait CanSearchRecords
         $this->resetPage();
     }
 
-    protected function applySearchToTableQuery(Builder $query): Builder
+    protected function applySearchToTableData(DataProvider $data): DataProvider
     {
-        $this->applyColumnSearchesToTableQuery($query);
-        $this->applyGlobalSearchToTableQuery($query);
+        $this->applyColumnSearchesToTableData($data);
+        $this->applyGlobalSearchToTableData($data);
 
-        return $query;
+        return $data;
     }
 
-    protected function applyColumnSearchesToTableQuery(Builder $query): Builder
+    protected function applyColumnSearchesToTableData(DataProvider $data): DataProvider
     {
         foreach ($this->getTableColumnSearches() as $column => $search) {
             if ($search === '') {
@@ -87,99 +89,13 @@ trait CanSearchRecords
                 continue;
             }
 
-            foreach (explode(' ', $search) as $searchWord) {
-                $query->where(function (Builder $query) use ($column, $searchWord) {
-                    $isFirst = true;
-
-                    $column->applySearchConstraint(
-                        $query,
-                        $searchWord,
-                        $isFirst,
-                    );
-                });
-            }
-        }
-
-        return $query;
-    }
-
-    protected function applyGlobalSearchToTableQuery(Builder $query): Builder
-    {
-        $search = $this->getTableSearch();
-
-        if ($search === '') {
-            return $query;
-        }
-
-        foreach (explode(' ', $search) as $searchWord) {
-            $query->where(function (Builder $query) use ($searchWord) {
-                $isFirst = true;
-
-                foreach ($this->getTable()->getColumns() as $column) {
-                    if ($column->isHidden()) {
-                        continue;
-                    }
-
-                    if (! $column->isGloballySearchable()) {
-                        continue;
-                    }
-
-                    $column->applySearchConstraint(
-                        $query,
-                        $searchWord,
-                        $isFirst,
-                    );
-                }
-            });
-        }
-
-        return $query;
-    }
-
-    protected function applySearchToTableData(Collection $data): Collection
-    {
-        $data = $this->applyColumnSearchesToTableData($data);
-        $data = $this->applyGlobalSearchToTableData($data);
-
-        return $data;
-    }
-
-    protected function applyColumnSearchesToTableData(Collection $data): Collection
-    {
-        foreach ($this->getTableColumnSearches() as $column => $search) {
-            if ($search === '') {
-                continue;
-            }
-
-            $column = $this->getTable()->getColumn($column);
-
-            if (! $column) {
-                continue;
-            }
-
-            if ($column->isHidden()) {
-                continue;
-            }
-
-            if (! $column->isIndividuallySearchable()) {
-                continue;
-            }
-
-            foreach (explode(' ', $search) as $searchWord) {
-                $isFirst = true;
-
-                $data = $column->applySearchConstraint(
-                    $data,
-                    $searchWord,
-                    $isFirst,
-                );
-            }
+            $data->applyIndividualColumnSearchConstraint($column, $search);
         }
 
         return $data;
     }
 
-    protected function applyGlobalSearchToTableData(Collection $data): Collection
+    protected function applyGlobalSearchToTableData(DataProvider $data): DataProvider
     {
         $search = $this->getTableSearch();
 
@@ -187,24 +103,13 @@ trait CanSearchRecords
             return $data;
         }
 
+        $columns = array_filter(
+            $this->getTable()->getColumns(),
+            fn (Column $column): bool => $column->isVisible() && $column->isGloballySearchable(),
+        );
+
         foreach (explode(' ', $search) as $searchWord) {
-            $isFirst = true;
-
-            foreach ($this->getTable()->getColumns() as $column) {
-                if ($column->isHidden()) {
-                    continue;
-                }
-
-                if (! $column->isGloballySearchable()) {
-                    continue;
-                }
-
-                $data = $column->applySearchConstraint(
-                    $data,
-                    $searchWord,
-                    $isFirst,
-                );
-            }
+            $data->applyGlobalSearchConstraint($columns, $searchWord);
         }
 
         return $data;

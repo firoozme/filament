@@ -4,6 +4,7 @@ namespace Filament\Tables\Concerns;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Tables\DataProviders\DataProvider;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\Layout;
 use Illuminate\Database\Eloquent\Builder;
@@ -98,39 +99,22 @@ trait HasFilters
         $this->updatedTableFilters();
     }
 
-    protected function applyFiltersToTableQuery(Builder $query): Builder
+    protected function applyFiltersToTableData(DataProvider $data): DataProvider
     {
+        $filters = $this->getTable()->getFilters();
         $filtersData = $this->getTableFiltersForm()->getRawState();
+        $query = $data->getEloquentQuery();
 
-        foreach ($this->getTable()->getFilters() as $filter) {
-            $filter->applyToBaseQuery(
-                $query,
-                $filtersData[$filter->getName()] ?? [],
-            );
-        }
-
-        return $query->where(function (Builder $query) use ($filtersData) {
-            foreach ($this->getTable()->getFilters() as $filter) {
-                $filter->apply(
+        if ($query) {
+            foreach ($filters as $filter) {
+                $filter->applyToBaseEloquentQuery(
                     $query,
                     $filtersData[$filter->getName()] ?? [],
                 );
             }
-        });
-    }
-
-    protected function applyFiltersToTableData(Collection $data): Collection
-    {
-        $filtersData = $this->getTableFiltersForm()->getRawState();
-
-        foreach ($this->getTable()->getFilters() as $filter) {
-            $filter->apply(
-                $data,
-                $data[$filtersData->getName()] ?? [],
-            );
         }
 
-        return $data;
+        return $data->applyFilters($filters, $filtersData);
     }
 
     public function getTableFilterState(string $name): ?array

@@ -3,56 +3,84 @@
 namespace Filament\Tables\Filters\Concerns;
 
 use Closure;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 trait InteractsWithTableQuery
 {
-    protected ?Closure $modifyQueryUsing = null;
+    protected ?Closure $modifyDataUsing = null;
 
     /**
-     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $state
      */
-    public function apply(Builder | Collection $query, array $data = []): Builder | Collection
+    public function apply(DataProvider $data, array $state = []): DataProvider
     {
         if ($this->isHidden()) {
-            return $query;
+            return $data;
         }
 
-        if (! $this->hasQueryModificationCallback()) {
-            return $query;
+        if (! $this->hasDataModificationCallback()) {
+            return $data;
         }
 
-        if (! ($data['isActive'] ?? true)) {
-            return $query;
+        if (! ($state['isActive'] ?? true)) {
+            return $data;
         }
 
-        $this->evaluate($this->modifyQueryUsing, [
-            'data' => $data,
-            'query' => $query,
-            'state' => $data,
-        ]);
+        $this->modifyData(
+            $this->modifyDataUsing,
+            $data,
+            $state,
+        );
 
-        return $query;
+        return $data;
+    }
+
+    /**
+     * @param array<string, mixed> $state
+     */
+    public function modifyData(Closure $using, DataProvider $data, array $state): void
+    {
+        $this->evaluate(
+            $using,
+            namedInjections: [
+                ...$data->getDefaultClosureDependenciesForEvaluationByName(),
+                'data' => $state,
+                'dataProvider' => $data,
+                'state' => $state,
+            ],
+            typedInjections: [
+                ...$data->getDefaultClosureDependenciesForEvaluationByType(),
+                DataProvider::class => $data,
+            ],
+        );
     }
 
     /**
      * @param  array<string, mixed>  $data
      */
-    public function applyToBaseQuery(Builder $query, array $data = []): Builder
+    public function applyToBaseEloquentQuery(Builder $query, array $data = []): Builder
     {
         return $query;
     }
 
-    public function query(?Closure $callback): static
+    public function using(?Closure $callback): static
     {
-        $this->modifyQueryUsing = $callback;
+        $this->modifyDataUsing = $callback;
 
         return $this;
     }
 
-    protected function hasQueryModificationCallback(): bool
+    public function query(?Closure $callback): static
     {
-        return $this->modifyQueryUsing instanceof Closure;
+        $this->using($callback);
+
+        return $this;
+    }
+
+    protected function hasDataModificationCallback(): bool
+    {
+        return $this->modifyDataUsing instanceof Closure;
     }
 }

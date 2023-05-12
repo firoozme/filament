@@ -4,6 +4,7 @@ namespace Filament\Tables\Filters;
 
 use Closure;
 use Filament\Forms\Components\Select;
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 
@@ -69,51 +70,30 @@ class SelectFilter extends BaseFilter
     /**
      * @param  array<string, mixed>  $data
      */
-    public function apply(Builder $query, array $data = []): Builder
+    public function apply(DataProvider $data, array $state = []): DataProvider
     {
         if ($this->evaluate($this->isStatic)) {
-            return $query;
+            return $data;
         }
 
-        if ($this->hasQueryModificationCallback()) {
-            return parent::apply($query, $data);
+        if ($this->hasDataModificationCallback()) {
+            return parent::apply($data, $state);
         }
 
         $isMultiple = $this->isMultiple();
 
         $values = $isMultiple ?
-            $data['values'] ?? null :
-            $data['value'] ?? null;
+            $state['values'] ?? null :
+            $state['value'] ?? null;
 
         if (! count(array_filter(
             Arr::wrap($values),
             fn ($value) => filled($value),
         ))) {
-            return $query;
+            return $data;
         }
 
-        if (! $this->queriesRelationships()) {
-            return $query->{$isMultiple ? 'whereIn' : 'where'}(
-                $this->getAttribute(),
-                $values,
-            );
-        }
-
-        if ($isMultiple) {
-            return $query->whereHas(
-                $this->getRelationshipName(),
-                fn (Builder $query) => $query->whereIn(
-                    $this->getRelationshipKey(),
-                    $values,
-                ),
-            );
-        }
-
-        return $query->whereRelation(
-            $this->getRelationshipName(),
-            $this->getRelationshipKey(),
-            $values,
-        );
+        return $data->where($this->getAttribute(), $values);
     }
 
     public function attribute(string | Closure | null $name): static

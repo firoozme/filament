@@ -2,7 +2,9 @@
 
 namespace Filament\Tables\Concerns;
 
+use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
 
 trait CanSortRecords
@@ -69,34 +71,34 @@ trait CanSortRecords
         $this->resetPage();
     }
 
-    protected function applySortingToTableQuery(Builder $query): Builder
+    protected function applySortingToTableData(DataProvider $data): DataProvider
     {
         if ($this->getTable()->isGroupsOnly()) {
-            return $query;
+            return $data;
         }
 
         if ($this->isTableReordering()) {
-            return $query->orderBy($this->getTable()->getReorderColumn());
+            return $data->order($this->getTable()->getReorderColumn());
         }
 
         if (! $this->tableSortColumn) {
-            return $this->applyDefaultSortingToTableQuery($query);
+            return $this->applyDefaultSortingToTableData($data);
         }
 
         $column = $this->getTable()->getSortableVisibleColumn($this->tableSortColumn);
 
         if (! $column) {
-            return $this->applyDefaultSortingToTableQuery($query);
+            return $this->applyDefaultSortingToTableData($data);
         }
 
         $sortDirection = $this->tableSortDirection === 'desc' ? 'desc' : 'asc';
 
-        $column->applySort($query, $sortDirection);
+        $column->applySort($data, $sortDirection);
 
-        return $query;
+        return $data;
     }
 
-    protected function applyDefaultSortingToTableQuery(Builder $query): Builder
+    protected function applyDefaultSortingToTableData(DataProvider $data): DataProvider
     {
         $sortColumnName = $this->getTable()->getDefaultSortColumn();
         $sortDirection = ($this->getTable()->getDefaultSortDirection() ?? $this->tableSortDirection) === 'desc' ? 'desc' : 'asc';
@@ -105,80 +107,30 @@ trait CanSortRecords
             $sortColumnName &&
             ($sortColumn = $this->getTable()->getSortableVisibleColumn($sortColumnName))
         ) {
-            $sortColumn->applySort($query, $sortDirection);
-
-            return $query;
+            return $sortColumn->applySort($data, $sortDirection);
         }
 
         if ($sortColumnName) {
-            return $query->orderBy($sortColumnName, $sortDirection);
+            return $data->order($sortColumnName, $sortDirection);
         }
 
-        if ($sortQueryUsing = $this->getTable()->getDefaultSortQuery()) {
-            app()->call($sortQueryUsing, [
+        if ($sortDataUsing = $this->getTable()->getDefaultSortUsing()) {
+            app()->call($sortDataUsing, [
+                ...$data->getDefaultClosureDependenciesForEvaluationByName(),
+                'dataProvider' => $data,
                 'direction' => $sortDirection,
-                'query' => $query,
             ]);
 
-            return $query;
-        }
-
-        return $query->orderBy($query->getModel()->getQualifiedKeyName());
-    }
-
-    protected function applySortingToTableData(Collection $data): Collection
-    {
-        if ($this->getTable()->isGroupsOnly()) {
             return $data;
         }
 
-        if ($this->isTableReordering()) {
-            return $data->sortBy($this->getTable()->getReorderColumn());
-        }
+        $query = $data->getEloquentQuery();
 
-        if (! $this->tableSortColumn) {
-            return $this->applyDefaultSortingToTableData($data);
-        }
-
-        $column = $this->getTable()->getSortableVisibleColumn($this->tableSortColumn);
-
-        if (! $column) {
-            return $this->applyDefaultSortingToTableData($data);
-        }
-
-        $sortDirection = $this->tableSortDirection === 'desc' ? 'desc' : 'asc';
-
-        return $column->applySort($data, $sortDirection);
-    }
-
-    protected function applyDefaultSortingToTableData(Collection $data): Collection
-    {
-        $sortColumnName = $this->getTable()->getDefaultSortColumn();
-        $sortDirection = ($this->getTable()->getDefaultSortDirection() ?? $this->tableSortDirection) === 'desc' ? 'desc' : 'asc';
-
-        if (
-            $sortColumnName &&
-            ($sortColumn = $this->getTable()->getSortableVisibleColumn($sortColumnName))
-        ) {
-            $sortColumn->applySort($data, $sortDirection);
-
+        if (! $query) {
             return $data;
         }
 
-        if ($sortColumnName) {
-            return $data->sortBy($sortColumnName, descending: $sortDirection === 'desc');
-        }
-
-        $sortQueryUsing = $this->getTable()->getDefaultSortQuery();
-
-        if (! $sortQueryUsing) {
-            return $data;
-        }
-
-        return app()->call($sortQueryUsing, [
-            'direction' => $sortDirection,
-            'query' => $data,
-        ]);
+        return $data->order($query->getModel()->getQualifiedKeyName());
     }
 
     /**
