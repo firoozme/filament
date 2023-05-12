@@ -5,7 +5,6 @@ namespace Filament\Tables\Filters;
 use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Tables\DataProviders\DataProvider;
-use Illuminate\Database\Eloquent\Builder;
 
 class TernaryFilter extends SelectFilter
 {

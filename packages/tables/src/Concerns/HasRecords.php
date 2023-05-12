@@ -4,7 +4,6 @@ namespace Filament\Tables\Concerns;
 
 use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -58,7 +57,7 @@ trait HasRecords
         return $data;
     }
 
-    protected function hydratePivotRelationForTableRecords(EloquentCollection | Paginator $records): EloquentCollection| Paginator
+    protected function hydratePivotRelationForTableRecords(EloquentCollection | Paginator $records): EloquentCollection | Paginator
     {
         $table = $this->getTable();
         $relationship = $table->getRelationship();

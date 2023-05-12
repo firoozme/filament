@@ -3,16 +3,15 @@
 namespace Filament\Tables\Table\Concerns;
 
 use Closure;
+use function Filament\Support\get_model_label;
+use function Filament\Support\locale_has_pluralization;
 use Filament\Tables\DataProviders\CollectionDataProvider;
 use Filament\Tables\DataProviders\DataProvider;
 use Filament\Tables\DataProviders\EloquentDataProvider;
+use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
-use function Filament\Support\get_model_label;
-use function Filament\Support\locale_has_pluralization;
-use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
 trait HasRecords

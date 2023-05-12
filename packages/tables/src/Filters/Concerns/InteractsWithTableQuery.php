@@ -5,7 +5,6 @@ namespace Filament\Tables\Filters\Concerns;
 use Closure;
 use Filament\Tables\DataProviders\DataProvider;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 trait InteractsWithTableQuery
 {
@@ -38,7 +37,7 @@ trait InteractsWithTableQuery
     }
 
     /**
-     * @param array<string, mixed> $state
+     * @param  array<string, mixed>  $state
      */
     public function modifyData(Closure $using, DataProvider $data, array $state): void
     {

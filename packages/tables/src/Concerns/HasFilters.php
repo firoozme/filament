@@ -7,8 +7,6 @@ use Filament\Forms\Form;
 use Filament\Tables\DataProviders\DataProvider;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\Layout;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Collection;
 
 /**
  * @property Form $tableFiltersForm

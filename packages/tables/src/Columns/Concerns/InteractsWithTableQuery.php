@@ -5,7 +5,6 @@ namespace Filament\Tables\Columns\Concerns;
 use Closure;
 use Exception;
 use Filament\Tables\DataProviders\DataProvider;
-use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +13,6 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Stringable;
 
 trait InteractsWithTableQuery
