@@ -7,8 +7,6 @@ use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Table;
 use Illuminate\Contracts\Pagination\Paginator as PaginatorContract;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection as EloquentCollection;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Collection;
@@ -53,7 +51,7 @@ class CollectionDataProvider implements DataProvider
         );
     }
 
-    public function hydratePivotRelation(Collection |PaginatorContract $records): Collection
+    public function hydratePivotRelation(Collection | PaginatorContract $records): Collection
     {
         return $records;
     }
