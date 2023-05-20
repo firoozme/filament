@@ -44,7 +44,7 @@ trait HasColor
         return $this;
     }
 
-    public function getColor(mixed $state): string|array|null
+    public function getColor(mixed $state): string | array | null
     {
         $color = $this->evaluate($this->color, [
             'state' => $state,

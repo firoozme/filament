@@ -319,13 +319,13 @@ class Color
      * @var string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string,
      *     700: string, 800: string, 900: string, 950: string}|null $backgroundColor
      */
-    protected static string|array|null $backgroundColor = null;
+    protected static string | array | null $backgroundColor = null;
 
     /**
      * @var string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string,
      *     700: string, 800: string, 900: string, 950: string}|null $textColor
      */
-    protected static string|array|null $textColor = null;
+    protected static string | array | null $textColor = null;
 
     protected static ?float $alpha = 1;
 
@@ -334,11 +334,12 @@ class Color
         static::$backgroundColor = null;
         static::$textColor = null;
         static::$alpha = 1;
+
         return app(static::class);
     }
 
     /**
-     * @param string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string} $color
+     * @param  string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}  $color
      * @return $this
      */
     public function backgroundColor(string | array $color): static
@@ -349,7 +350,7 @@ class Color
     }
 
     /**
-     * @param string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string} $color
+     * @param  string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}  $color
      * @return $this
      */
     public function textColor(string | array $color): static
@@ -387,7 +388,7 @@ class Color
         return match (true) {
             is_array(static::$textColor) => static::$textColor,
             static::determineType(static::$textColor) === 'hex' => static::hex(static::$textColor),
-            static::determineType(static::$textColor) === 'rgb' => static::rgb('rgb(' . static::$textColor. ')'),
+            static::determineType(static::$textColor) === 'rgb' => static::rgb('rgb(' . static::$textColor . ')'),
             default => null,
         };
     }
@@ -474,7 +475,7 @@ class Color
     {
         if (str_starts_with($color, '#')) {
             return 'hex';
-        } else if (str_contains($color, ',')) {
+        } elseif (str_contains($color, ',')) {
             return 'rgb';
         }
 
