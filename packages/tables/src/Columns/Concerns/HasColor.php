@@ -3,14 +3,15 @@
 namespace Filament\Tables\Columns\Concerns;
 
 use Closure;
+use Filament\Support\Color;
 use Filament\Support\Contracts\HasColor as ColorInterface;
 use Filament\Tables\Columns\Column;
 
 trait HasColor
 {
-    protected string | bool | Closure | null $color = null;
+    protected string | bool | Closure | array | null $color = null;
 
-    public function color(string | bool | Closure | null $color): static
+    public function color(string | bool | Closure | array | null $color): static
     {
         $this->color = $color;
 
@@ -43,7 +44,7 @@ trait HasColor
         return $this;
     }
 
-    public function getColor(mixed $state): ?string
+    public function getColor(mixed $state): string|array|null
     {
         $color = $this->evaluate($this->color, [
             'state' => $state,
@@ -54,6 +55,10 @@ trait HasColor
         }
 
         if (filled($color)) {
+            if ($color instanceof Color) {
+                return $color->asCustomColors();
+            }
+
             return $color;
         }
 

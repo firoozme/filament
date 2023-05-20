@@ -316,6 +316,100 @@ class Color
     ];
 
     /**
+     * @var string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string,
+     *     700: string, 800: string, 900: string, 950: string}|null $backgroundColor
+     */
+    protected static string|array|null $backgroundColor = null;
+
+    /**
+     * @var string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string,
+     *     700: string, 800: string, 900: string, 950: string}|null $textColor
+     */
+    protected static string|array|null $textColor = null;
+
+    protected static ?float $alpha = 1;
+
+    public static function make(): static
+    {
+        static::$backgroundColor = null;
+        static::$textColor = null;
+        static::$alpha = 1;
+        return app(static::class);
+    }
+
+    /**
+     * @param string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string} $color
+     * @return $this
+     */
+    public function backgroundColor(string | array $color): static
+    {
+        static::$backgroundColor = $color;
+
+        return $this;
+    }
+
+    /**
+     * @param string|array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string} $color
+     * @return $this
+     */
+    public function textColor(string | array $color): static
+    {
+        static::$textColor = $color;
+
+        return $this;
+    }
+
+    public function backgroundOpacity(float $alpha): static
+    {
+        static::$alpha = $alpha;
+
+        return $this;
+    }
+
+    /**
+     * @return array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}|null
+     */
+    public static function getBackgroundColor(): ?array
+    {
+        return match (true) {
+            is_array(static::$backgroundColor) => static::$backgroundColor,
+            static::determineType(static::$backgroundColor) === 'hex' => static::hex(static::$backgroundColor),
+            static::determineType(static::$backgroundColor) === 'rgb' => static::rgb('rgb(' . static::$backgroundColor . ')'),
+            default => null,
+        };
+    }
+
+    /**
+     * @return array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}|null
+     */
+    public static function getTextColor(): ?array
+    {
+        return match (true) {
+            is_array(static::$textColor) => static::$textColor,
+            static::determineType(static::$textColor) === 'hex' => static::hex(static::$textColor),
+            static::determineType(static::$textColor) === 'rgb' => static::rgb('rgb(' . static::$textColor. ')'),
+            default => null,
+        };
+    }
+
+    public static function getBackgroundOpacity(): float
+    {
+        return static::$alpha;
+    }
+
+    /**
+     * @return array{background: array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}, text: array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}, alpha: float}
+     */
+    public function asCustomColors(): array
+    {
+        return [
+            'background' => static::getBackgroundColor(),
+            'text' => static::getTextColor(),
+            'alpha' => static::getBackgroundOpacity(),
+        ];
+    }
+
+    /**
      * @return array{50: string, 100: string, 200: string, 300: string, 400: string, 500: string, 600: string, 700: string, 800: string, 900: string, 950: string}
      */
     public static function hex(string $color): array
@@ -328,7 +422,7 @@ class Color
      */
     public static function rgb(string $color): array
     {
-        return static::generateShades(Rgb::fromString($color));
+        return static::generateShades(Rgb::fromString($color)->toRgb());
     }
 
     /**
@@ -374,5 +468,16 @@ class Color
         }
 
         return $colors;
+    }
+
+    protected static function determineType(string $color): ?string
+    {
+        if (str_starts_with($color, '#')) {
+            return 'hex';
+        } else if (str_contains($color, ',')) {
+            return 'rgb';
+        }
+
+        return null;
     }
 }

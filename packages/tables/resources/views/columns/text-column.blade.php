@@ -47,7 +47,8 @@
 
     <{{ $isListWithLineBreaks ? 'ul' : 'div' }} @class([
         'list-disc list-inside' => $isBulleted(),
-        'flex flex-wrap gap-1' => $isBadge,
+        'flex gap-1' => $isBadge,
+        'flex-wrap' => $isBadge && $canWrap,
     ])>
         @foreach ($arrayState as $state)
             @php
@@ -58,8 +59,8 @@
             @if (filled($formattedState))
                 <{{ $isListWithLineBreaks ? 'li' : 'div' }}>
                     <div @class([
-                        'inline-flex items-center space-x-1 rtl:space-x-reverse',
-                        'filament-tables-text-column-badge justify-center min-h-6 px-2 py-0.5 rounded-xl whitespace-nowrap' => $isBadge,
+                        'inline-flex items-center space-x-1 rtl:space-x-reverse text-[var(--badge-text-color)] bg-[var(--badge-background-color)]',
+                        'filament-tables-text-column-badge justify-center min-h-6 px-2 py-0.5 rounded-xl' => $isBadge,
                         'whitespace-normal' => $canWrap,
                         ($isBadge ? match ($color = $getColor($state)) {
                             'danger' => 'filament-tables-text-column-badge-color-danger text-danger-700 bg-danger-500/10 dark:text-danger-500',
@@ -69,7 +70,7 @@
                             'secondary' => 'filament-tables-text-column-badge-color-secondary text-secondary-700 bg-secondary-500/10 dark:text-secondary-500',
                             'success' => 'filament-tables-text-column-badge-color-success text-success-700 bg-success-500/10 dark:text-success-500',
                             'warning' => 'filament-tables-text-column-badge-color-warning text-warning-700 bg-warning-500/10 dark:text-warning-500',
-                            default => $color,
+                            default => ! is_array($color) ? $color : null,
                         } : null),
                         ((! ($isBadge || $isClickable)) ? match ($color = $getColor($state)) {
                             'danger' => 'text-danger-600',
@@ -79,7 +80,7 @@
                             'secondary' => 'text-secondary-600',
                             'success' => 'text-success-600',
                             'warning' => 'text-warning-600',
-                            default => $color,
+                            default => ! is_array($color) ? $color : null,
                         } : null),
                         match ($size = ($isBadge ? 'xs' : $getSize($state))) {
                             'xs' => 'text-xs',
@@ -105,7 +106,14 @@
                             'mono' => 'font-mono',
                             default => null,
                         },
-                    ])>
+                    ])
+                        @if ($isBadge && isset($color['background']))
+                            style="--badge-background-color:rgba({{ $color['background'][500] }}, {{ $color['alpha'] }}); --badge-text-color:rgba({{ $color['text'][500] }});"
+                        @endif
+                        @if (! $isBadge && is_array($color))
+                            style="--badge-text-color:rgb({{ $color[600] }});"
+                        @endif
+                    >
                         @if ($icon && $iconPosition === 'before')
                             <x-filament::icon
                                 :name="$icon"
