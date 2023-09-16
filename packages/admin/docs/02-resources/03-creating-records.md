@@ -161,6 +161,8 @@ protected function beforeCreate(): void
 
 In this example, the code in the `beforeCreate()` method will be called before the data in the form is saved to the database.
 
+with `$this->record` and `$ths->data` we can access to created record and entered data.
+
 There are several available hooks for the Create page:
 
 ```php
